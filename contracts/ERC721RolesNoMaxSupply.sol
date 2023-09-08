@@ -88,7 +88,7 @@ contract ERC721RolesNoMaxSupply is
   function safeMint(address _to, string memory _tokenURI) public onlyRole(MINTER_ROLE) {
     // check to see if the mint process is active
     uint256 mintRemainingTime = getRemainingMintTime();
-    if (!(mintRemainingTime > 0)) revert MintPeriodEnded();
+    if (mintRemainingTime == 0) revert MintPeriodEnded();
 
     // since there will never be a number of assets greater than 2^256-1,
     // therefore `tokenIdCounter` won't overflow or underflow
