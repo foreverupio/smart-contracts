@@ -7,9 +7,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URISto
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 
-contract ERC721RolesNoMaxSupply is
+contract Collection is
   Initializable,
   ERC721Upgradeable,
   ERC721EnumerableUpgradeable,
@@ -17,11 +16,9 @@ contract ERC721RolesNoMaxSupply is
   AccessControlUpgradeable,
   UUPSUpgradeable
 {
-  using CountersUpgradeable for CountersUpgradeable.Counter;
-
   /*//////////////////////////////////////////////////////////////////////////
                                 PUBLIC CONSTANTS
-    //////////////////////////////////////////////////////////////////////////*/
+  //////////////////////////////////////////////////////////////////////////*/
 
   string public constant VERSION = "1.0.0";
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -29,7 +26,7 @@ contract ERC721RolesNoMaxSupply is
 
   /*//////////////////////////////////////////////////////////////////////////
                                     STORAGE
-    //////////////////////////////////////////////////////////////////////////*/
+  //////////////////////////////////////////////////////////////////////////*/
 
   /// @notice Timestamp when the minting process can start
   /// @dev Defined as unix timestamp in seconds
@@ -42,14 +39,14 @@ contract ERC721RolesNoMaxSupply is
 
   /*//////////////////////////////////////////////////////////////////////////
                                     ERRORS
-    //////////////////////////////////////////////////////////////////////////*/
+  //////////////////////////////////////////////////////////////////////////*/
 
   /// @notice Thrown when the minting period has ended
   error MintPeriodEnded();
 
   /*//////////////////////////////////////////////////////////////////////////
                             UPGRADEABLE RELATED FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
+  //////////////////////////////////////////////////////////////////////////*/
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
@@ -57,6 +54,7 @@ contract ERC721RolesNoMaxSupply is
   }
 
   function initialize(
+    address owner,
     string memory _name,
     string memory _symbol,
     uint256 _mintDuration,
@@ -67,9 +65,9 @@ contract ERC721RolesNoMaxSupply is
     __AccessControl_init();
     __UUPSUpgradeable_init();
 
-    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _grantRole(MINTER_ROLE, msg.sender);
-    _grantRole(UPGRADER_ROLE, msg.sender);
+    _grantRole(DEFAULT_ADMIN_ROLE, owner);
+    _grantRole(MINTER_ROLE, owner);
+    _grantRole(UPGRADER_ROLE, owner);
 
     mintDuration = _mintDuration;
     mintStartTime = _mintStartTime;
@@ -78,10 +76,10 @@ contract ERC721RolesNoMaxSupply is
   function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 
   /*//////////////////////////////////////////////////////////////////////////
-                            CONTRACT-SPECIFIC FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
+                            CONTRACT-SPECIFIC METHODS
+  //////////////////////////////////////////////////////////////////////////*/
 
-  /// @notice Mint a ERC721 token to the recipient address
+  /// @notice Mint an ERC721 token to the recipient address
   /// @dev The `_tokenURI` must be generated off-chain depending on the token's rarity
   /// @param _to The recipient address to which the token will be minted
   /// @param _tokenURI The hash of the token's metadata
@@ -96,6 +94,7 @@ contract ERC721RolesNoMaxSupply is
     unchecked {
       tokenIdCounter += 1;
     }
+
     // mint a new token to the recipient address
     _safeMint(_to, tokenIdCounter);
     // set the according tokenURI to the freshly minted token
@@ -104,7 +103,7 @@ contract ERC721RolesNoMaxSupply is
 
   /*//////////////////////////////////////////////////////////////////////////
                             INTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
+  //////////////////////////////////////////////////////////////////////////*/
 
   /// @notice Computes the remaining period of the minting time
   /// @dev Add the duration of the minting process to the starting period and substract the block timestamp
@@ -115,7 +114,7 @@ contract ERC721RolesNoMaxSupply is
 
   /*//////////////////////////////////////////////////////////////////////////
                             REQUIRED OVERRIDDEN FUNCTIONS
-    //////////////////////////////////////////////////////////////////////////*/
+  //////////////////////////////////////////////////////////////////////////*/
 
   function _burn(uint256 tokenId) internal override(ERC721Upgradeable, ERC721URIStorageUpgradeable) {
     super._burn(tokenId);

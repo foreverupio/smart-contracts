@@ -1,5 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "@openzeppelin/hardhat-upgrades";
 import { INFURA_API_KEY, FORKING_BLOCK_NUMMBER, getNetworkConfig } from "./config";
 
 const config: HardhatUserConfig = {
@@ -20,7 +21,7 @@ const config: HardhatUserConfig = {
     mumbai: getNetworkConfig("mumbai"),
   },
   solidity: {
-    version: "0.8.19",
+    version: "0.8.21",
     settings: {
       optimizer: {
         enabled: true,
